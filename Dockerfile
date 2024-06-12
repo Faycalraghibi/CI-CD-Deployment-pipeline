@@ -1,15 +1,21 @@
-# Use an official OpenJDK runtime as a parent image
-FROM openjdk:11-jre-slim
+# Use a base image with Java and Tomcat installed
+FROM tomcat:9-jre8
 
-# Make port 8080 available to the world outside this container
-EXPOSE 8080
+# Maintainer information
+LABEL maintainer="Faycal Raghibi <faycalraghibi24@gmail.com>"
 
-# The application's jar file
-ARG JAR_FILE=target/*.jar
+# Remove the default Tomcat applications
+RUN rm -rf /usr/local/tomcat/webapps/*
 
-# Add the application's jar to the container
-COPY ${JAR_FILE} app.jar
+# Copy the WAR file from the target directory to the Tomcat webapps directory
+COPY target/your-application.war /usr/local/tomcat/webapps/ROOT.war
 
-# Run the jar file
-ENTRYPOINT ["java","-jar","/app.jar"]
+# Expose port 8081
+EXPOSE 8081
+
+# Modify the default port Tomcat listens on
+RUN sed -i 's/8080/8081/g' /usr/local/tomcat/conf/server.xml
+
+# Start Tomcat
+CMD ["catalina.sh", "run"]
 
