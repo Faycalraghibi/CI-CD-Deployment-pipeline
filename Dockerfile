@@ -19,3 +19,5 @@ RUN sed -i 's/8080/8081/g' /usr/local/tomcat/conf/server.xml
 # Start Tomcat
 CMD ["catalina.sh", "run"]
 
+
+

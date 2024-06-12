@@ -19,8 +19,11 @@ services:
       - "8082:8081"  #  Map Tomcat's port 8081 to host port 8082
     networks:
       - app-network
-
+      
 networks:
   app-network:
     driver: bridge
+
+
+
 
