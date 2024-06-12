@@ -1,5 +1,5 @@
 # Use a base image with Java and Tomcat installed
-FROM tomcat:9-jre8
+FROM tomcat:10.1.10-jdk21
 
 # Maintainer information
 LABEL maintainer="Faycal Raghibi <faycalraghibi24@gmail.com>"
@@ -8,8 +8,7 @@ LABEL maintainer="Faycal Raghibi <faycalraghibi24@gmail.com>"
 RUN rm -rf /usr/local/tomcat/webapps/*
 
 # Copy the WAR file from the target directory to the Tomcat webapps directory
-COPY target/your-application.war /usr/local/tomcat/webapps/ROOT.war
-
+COPY target/spring.example-0.0.1-SNAPSHOT.jar /usr/local/tomcat/webapps/app.war
 # Expose port 8081
 EXPOSE 8081
 

@@ -1,40 +1,29 @@
 #!/bin/bash
 
-# Define container names
-BLUE_CONTAINER=app-blue
-GREEN_CONTAINER=app-green
+# Determine which color is currently deployed
+CURRENT_COLOR=$(docker ps --filter "name=spring-app" --format "{{.Names}}" | grep -E 'spring-app-(blue|green)' | awk -F '-' '{print $NF}')
 
-# Function to check if a container is running
-is_running() {
-  docker ps -q -f name=$1
-}
-
-# Function to get the port mapping of a container
-get_port() {
-  docker inspect --format='{{(index (index .NetworkSettings.Ports "8081/tcp") 0).HostPort}}' $1
-}
-
-# Deploy to the inactive container
-if is_running ${BLUE_CONTAINER}; then
-  # Blue is running, deploy to green
-  docker-compose up -d app-green
-  NEW_CONTAINER=${GREEN_CONTAINER}
-  OLD_CONTAINER=${BLUE_CONTAINER}
-  NEW_PORT=$(get_port ${GREEN_CONTAINER})
+if [ "$CURRENT_COLOR" == "blue" ]; then
+  IDLE_COLOR="green"
+  IDLE_PORT="8082"
 else
-  # Blue is not running, deploy to blue
-  docker-compose up -d app-blue
-  NEW_CONTAINER=${BLUE_CONTAINER}
-  OLD_CONTAINER=${GREEN_CONTAINER}
-  NEW_PORT=$(get_port ${BLUE_CONTAINER})
+  IDLE_COLOR="blue"
+  IDLE_PORT="8081"
 fi
 
-# Optionally, wait for the new container to be healthy (if health checks are configured)
-# sleep 30
+# Deploy the new version
+docker-compose up -d --build spring-app-$IDLE_COLOR
 
-# Remove the old container
-docker-compose stop ${OLD_CONTAINER}
-docker-compose rm -f ${OLD_CONTAINER}
+# Wait for the new version to be healthy
+sleep 30
 
-echo "Switched deployment to ${NEW_CONTAINER} running on port ${NEW_PORT}"
+# Switch the load balancer (or the reverse proxy) to the new version
+# This depends on your setup, for example, you might use an Nginx or HAProxy config here
 
+# Stop the old version
+if [ "$CURRENT_COLOR" != "" ]; then
+  docker-compose stop spring-app-$CURRENT_COLOR
+fi
+
+# Remove old containers
+docker-compose rm -f spring-app-$CURRENT_COLOR

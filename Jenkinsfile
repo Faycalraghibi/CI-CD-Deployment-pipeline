@@ -1,11 +1,12 @@
 pipeline {
     agent any
-
-    environment {
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-        REPO_NAME = 'faycalraghibi/ci-cd-deployment-pipeline'
+    tools {
+        maven 'Maven' // Doit correspondre au nom de l'installation de Maven dans Jenkins
+        jdk 'JDK 21' // Doit correspondre au nom de l'installation de JDK dans Jenkins
     }
-
+    environment {
+        DEPLOY_COLOR = sh(script: 'if [ $(docker ps -q --filter "name=spring-app-green") ]; then echo blue; else echo green; fi', returnStdout: true).trim()
+    }
     stages {
         stage('Checkout') {
             steps {
@@ -17,31 +18,22 @@ pipeline {
                 sh './mvnw clean package'
             }
         }
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${env.REPO_NAME}:${env.BUILD_ID}")
-                }
-            }
-        }
-        stage('Docker Push') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        dockerImage.push()
-                        dockerImage.push('latest')
-                    }
+                    docker.build("spring-example:${env.BUILD_ID}")
                 }
             }
         }
         stage('Deploy') {
             steps {
-                sh './deploy.sh'
+                script {
+                    docker.withRegistry('', 'docker-hub-credentials') {
+                        docker.image("spring-example:${env.BUILD_ID}").push()
+                    }
+                    sh './deploy.sh'
+                }
             }
         }
     }
 }
-
-
-
-
