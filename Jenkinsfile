@@ -1,13 +1,15 @@
 pipeline {
     agent any
+
     environment {
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-        DOCKER_IMAGE = 'votre_image_docker'
+        REPO_NAME = 'faycalraghibi/ci-cd-deployment-pipeline'
     }
+
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                git url: 'https://github.com/Faycalraghibi/CI-CD-Deployment-pipeline.git', branch: 'main'
+                git 'https://github.com/Faycalraghibi/CI-CD-Deployment-pipeline.git'
             }
         }
         stage('Build') {
@@ -15,27 +17,26 @@ pipeline {
                 sh './mvnw clean package'
             }
         }
-        stage('Build Docker Image') {
+        stage('Docker Build') {
             steps {
                 script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_ID}")
+                    dockerImage = docker.build("${env.REPO_NAME}:${env.BUILD_ID}")
                 }
             }
         }
-        stage('Push Docker Image') {
+        stage('Docker Push') {
             steps {
                 script {
-                    docker.withRegistry('', "${DOCKER_CREDENTIALS_ID}") {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
                         dockerImage.push()
+                        dockerImage.push('latest')
                     }
                 }
             }
         }
-        stage('Deploy to Docker') {
+        stage('Deploy') {
             steps {
-                script {
-                    sh './deploy.sh'
-                }
+                sh './deploy.sh'
             }
         }
     }
