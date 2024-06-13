@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Build the Docker image
+docker build -t spring-example:latest .
+
 # Determine which color is currently deployed
 CURRENT_COLOR=$(docker ps --filter "name=spring-app" --format "{{.Names}}" | grep -E 'spring-app-(blue|green)' | awk -F '-' '{print $NF}')
 
@@ -27,3 +30,4 @@ fi
 
 # Remove old containers
 docker-compose rm -f spring-app-$CURRENT_COLOR
+

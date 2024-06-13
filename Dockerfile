@@ -1,5 +1,5 @@
 # Use a base image with Java and Tomcat installed
-FROM tomcat:10.1.10-jdk21
+FROM tomcat:10.1.10-jdk17
 
 # Maintainer information
 LABEL maintainer="Faycal Raghibi <faycalraghibi24@gmail.com>"
