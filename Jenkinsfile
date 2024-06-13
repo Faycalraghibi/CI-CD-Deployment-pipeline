@@ -25,15 +25,31 @@ pipeline {
                 }
             }
         }
-        stage('Deploy') {
+        stage('Push Docker Image') {
             steps {
                 script {
                     docker.withRegistry('', 'docker-hub-credentials') {
                         docker.image("spring-example:${env.BUILD_ID}").push()
                     }
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script {
+                    sh "sed -i 's/spring-app-blue/spring-app-${env.DEPLOY_COLOR}/g' deploy.sh"
                     sh './deploy.sh'
                 }
             }
         }
     }
+    post {
+        success {
+            echo 'The build and deployment were successful!'
+        }
+        failure {
+            echo 'The build or deployment failed.'
+        }
+    }
 }
+
